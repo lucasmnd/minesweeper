@@ -17,8 +17,7 @@ minefield_t* create_minefield(uint16_t rows, uint16_t cols, uint16_t mines){
     minefield->known_tiles = 0;
     minefield->flags = 0;
     minefield->initialized = false;
-    // TODO: alterar a seed
-    minefield->seed = 12345;
+    minefield->seed = time(NULL);
 
     return minefield;
 }
