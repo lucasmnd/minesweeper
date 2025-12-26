@@ -30,9 +30,9 @@ Color GetNumberColor(int number) {
 
 int main(void) {
     // 1. Configuração do Jogo
-    int rows = 5;
-    int cols = 5;
-    int mines = 5;
+    int rows = 16;
+    int cols = 30;
+    int mines = 99;
 
     // Cálculo do tamanho da janela baseado no grid
     int screenWidth = (cols * (CELL_SIZE + GAP)) + (SIDE_MARGIN * 2);
@@ -68,11 +68,11 @@ int main(void) {
             if (insideGrid) {
                 // Botão Esquerdo: Abrir (Open)
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    api_reveal_tile(r, c);
+                    api_left_click(r, c);
                 }
                 // Botão Direito: Bandeira (Flag)
                 else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                    api_toggle_flag(r, c);
+                    api_right_click(r, c);
                 }
             }
         }

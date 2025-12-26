@@ -7,9 +7,9 @@ int api_clear();
 
 int api_start_new_game(int rows, int cols, int mines);
 
-int api_reveal_tile(int row, int col);
+int api_left_click(int row, int col);
 
-int api_toggle_flag(int row, int col);
+int api_right_click(int row, int col);
 
 int api_get_tile(int row, int col, int *state, int *number);
 

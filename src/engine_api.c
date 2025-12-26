@@ -19,7 +19,7 @@ int api_start_new_game(int rows, int cols, int mines){
     return 0;
 }
 
-int api_reveal_tile(int row, int col){
+int api_left_click(int row, int col){
     if(board == NULL) return -1;
 
     int ret = check_tile(board, row, col);
@@ -28,7 +28,7 @@ int api_reveal_tile(int row, int col){
     return 0;
 }
 
-int api_toggle_flag(int row, int col){
+int api_right_click(int row, int col){
     if(board == NULL) return -1;
 
     int32_t (*tile_states)[board->cols] = (int32_t (*)[board->cols]) board->tile_states;

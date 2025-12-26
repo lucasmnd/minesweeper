@@ -25,7 +25,4 @@ void destroy_minefield(minefield_t *minefield);
 
 int setup_minefield(minefield_t *minefield, uint16_t x0, uint16_t y0);
 
-bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col,
-    enum Tile_State ts);
-
 #endif

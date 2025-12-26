@@ -1,7 +1,6 @@
 #include "internals/minefield.h"
 #include <stdlib.h>
 #include <time.h>
-#include <sysexits.h>
 
 static int generate_mines(minefield_t *minefield, uint16_t x0, uint16_t y0);
 static int generate_numbers(minefield_t *minefield);
@@ -83,44 +82,4 @@ static int generate_numbers(minefield_t *minefield){
         }
     }
     return 0;
-}
-
-bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col, enum Tile_State ts){
-    int32_t (*tile_states)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->tile_states;
-    int32_t (*numbers_grid)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->numbers_grid;
-    enum Tile_State current_state = tile_states[row][col];
-    
-    if(current_state == ts) return true;
-    
-    switch(current_state){
-        case TS_UNKNOWN:
-            break;
-        
-        case TS_KNOWN:
-            exit(EX_USAGE);
-            break;
-
-        case TS_FLAGGED:
-            minefield->flags--;
-            break;
-    }
-
-    tile_states[row][col] = ts;
-
-    switch(ts){
-        case TS_UNKNOWN:
-            break;
-        
-        case TS_FLAGGED:
-            minefield->flags++;
-            break;
-        
-        case TS_KNOWN:
-            if(numbers_grid[row][col] == -1)
-                return false;
-            minefield->known_tiles++;
-            break;
-    }
-
-    return true;
 }
