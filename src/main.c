@@ -1,139 +1,170 @@
+// GERADO POR IA
+
+#include "raylib.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include "../inc/minefield.h"
 #include "../inc/actions.h"
 #include "../inc/game_states.h"
 
-// Função auxiliar para limpar a tela (funciona em Linux/Mac/Windows na maioria dos terminais)
-void clear_screen() {
-    printf("\033[H\033[J");
+// --- Configurações Visuais ---
+#define CELL_SIZE 30
+#define TOP_MARGIN 60
+#define SIDE_MARGIN 20
+#define GAP 2 // Espaço entre células
+
+// Cores Clássicas do Campo Minado
+Color COL_UNKNOWN = { 192, 192, 192, 255 }; // Cinza
+Color COL_KNOWN   = { 220, 220, 220, 255 }; // Cinza claro
+Color COL_BG      = { 100, 100, 100, 255 }; // Fundo da janela
+
+// Mapeamento de cores dos números (1=Azul, 2=Verde, etc)
+Color GetNumberColor(int number) {
+    switch(number) {
+        case 1: return BLUE;
+        case 2: return DARKGREEN;
+        case 3: return RED;
+        case 4: return DARKBLUE;
+        case 5: return MAROON;
+        case 6: return LIME;
+        case 7: return BLACK;
+        case 8: return GRAY;
+        default: return BLACK;
+    }
 }
 
-// Função para desenhar o tabuleiro
-// reveal_all: Se true, mostra onde estão as minas (usado no Game Over)
-void print_board(minefield_t *mf, bool reveal_all) {
-    // Truque do VLA para acessar como matriz 2D
-    int32_t (*states)[mf->cols] = (int32_t (*)[mf->cols])mf->tile_states;
-    int32_t (*numbers)[mf->cols] = (int32_t (*)[mf->cols])mf->numbers_grid;
+int main(void) {
+    // 1. Configuração do Jogo
+    int rows = 5;
+    int cols = 5;
+    int mines = 5;
 
-    printf("\n    ");
-    for (int j = 0; j < mf->cols; j++) printf("%d ", j); // Cabeçalho das colunas
-    printf("\n   ");
-    for (int j = 0; j < mf->cols; j++) printf("--");
-    printf("\n");
+    // Cálculo do tamanho da janela baseado no grid
+    int screenWidth = (cols * (CELL_SIZE + GAP)) + (SIDE_MARGIN * 2);
+    int screenHeight = (rows * (CELL_SIZE + GAP)) + TOP_MARGIN + SIDE_MARGIN;
 
-    for (int i = 0; i < mf->rows; i++) {
-        printf("%d | ", i); // Cabeçalho das linhas
-        for (int j = 0; j < mf->cols; j++) {
-            char symbol = '?';
-            int state = states[i][j];
-            int number = numbers[i][j];
+    InitWindow(screenWidth, screenHeight, "Campo Minado - C Engine + Raylib");
+    SetTargetFPS(60);
 
-            // Lógica de exibição
-            if (state == TS_FLAGGED) {
-                symbol = 'F'; // Bandeira
-                // Se for game over e a bandeira estava errada, mostramos erro (opcional)
-                if (reveal_all && number != -1) symbol = 'X'; 
-            } 
-            else if (state == TS_KNOWN || reveal_all) {
-                if (number == -1) {
-                    symbol = '*'; // Mina
-                } else if (number == 0) {
-                    symbol = ' '; // Vazio
-                } else {
-                    symbol = number + '0'; // Converte int para char numérico
+    // Inicializa sua engine
+    minefield_t *mf = create_minefield(rows, cols, mines);
+    
+    int gameState = GAME_UNFINISHED;
+    bool exploded = false;
+
+    // --- GAME LOOP (Substitui o while do scanf) ---
+    while (!WindowShouldClose()) {
+        
+        // ================= UPDATE (Lógica) =================
+        
+        // Reset com a tecla 'R'
+        if (IsKeyPressed(KEY_R)) {
+            destroy_minefield(mf);
+            mf = create_minefield(rows, cols, mines);
+            gameState = GAME_UNFINISHED;
+            exploded = false;
+        }
+
+        // Só processa cliques se o jogo não acabou
+        if (gameState == GAME_UNFINISHED) {
+            Vector2 mouse = GetMousePosition();
+            
+            // Verifica se o clique foi dentro da área do grid
+            // Matemática: (Posição Mouse - Margem) / Tamanho da Célula
+            int c = (mouse.x - SIDE_MARGIN) / (CELL_SIZE + GAP);
+            int r = (mouse.y - TOP_MARGIN) / (CELL_SIZE + GAP);
+
+            bool insideGrid = (c >= 0 && c < cols && r >= 0 && r < rows);
+
+            if (insideGrid) {
+                // Botão Esquerdo: Abrir (Open)
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    int res = check_tile(mf, r, c);
+                    if (res == CHECKED_MINE) exploded = true;
                 }
-            } 
-            else {
-                symbol = '.'; // Fechado
+                // Botão Direito: Bandeira (Flag)
+                else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+                    // Alterna entre Flag e Unflag
+                    // Precisaria ler o estado antes, ou criar uma função toggle_flag na engine
+                    // Como sua engine tem flag e unflag separados, vamos verificar manual:
+                    
+                    // Acesso "sujo" para verificar estado (idealmente use um getter)
+                    int32_t (*states)[mf->cols] = (int32_t (*)[mf->cols])mf->tile_states;
+                    if (states[r][c] == TS_FLAGGED)
+                        unflag_tile(mf, r, c);
+                    else
+                        flag_tile(mf, r, c);
+                }
             }
             
-            printf("%c ", symbol);
+            gameState = check_game_state(mf, exploded);
         }
-        printf("\n");
-    }
-    
-    // Status do jogo
-    printf("\nMinas Totais: %d | Bandeiras: %d\n", mf->total_mines, mf->flags);
-}
 
-int main() {
-    // Configurações do jogo
-    int rows = 8;
-    int cols = 8;
-    int mines = 10;
+        // ================= DRAW (Desenho) =================
+        BeginDrawing();
+        ClearBackground(COL_BG);
 
-    // Cria o campo (lembre-se: minas não são geradas aqui, só no 1º clique)
-    minefield_t *mf = create_minefield(rows, cols, mines);
-    if (!mf) {
-        fprintf(stderr, "Erro ao alocar memoria!\n");
-        return 1;
-    }
-
-    int state = GAME_UNFINISHED;
-    bool exploded = false; // Flag auxiliar para passar pro check_game_state
-
-    while (state == GAME_UNFINISHED) {
-        clear_screen();
-        printf("=== CAMPO MINADO (C Engine) ===\n");
-        print_board(mf, false);
-
-        int r, c;
-        char action;
+        // UI Superior
+        DrawText(TextFormat("Minas: %d", mf->total_mines - mf->flags), SIDE_MARGIN, 20, 20, WHITE);
         
-        printf("\nComandos:\n");
-        printf("  o [lin] [col] -> Abrir (Open)\n");
-        printf("  f [lin] [col] -> Bandeira (Flag)\n");
-        printf("  u [lin] [col] -> Remover Bandeira (Unflag)\n");
-        printf("Digite: ");
-        
-        // Lê input do usuário
-        int read_count = scanf(" %c %d %d", &action, &r, &c);
+        if (gameState == GAME_WON) 
+            DrawText("VITORIA! (R para reiniciar)", SIDE_MARGIN + 150, 20, 20, GREEN);
+        else if (gameState == GAME_LOST) 
+            DrawText("GAME OVER (R para reiniciar)", SIDE_MARGIN + 150, 20, 20, RED);
 
-        // Limpa buffer do teclado caso o usuário digite lixo
-        while(getchar() != '\n'); 
+        // Desenhando o Grid
+        // Acesso aos ponteiros para leitura
+        int32_t (*states)[mf->cols] = (int32_t (*)[mf->cols])mf->tile_states;
+        int32_t (*numbers)[mf->cols] = (int32_t (*)[mf->cols])mf->numbers_grid;
 
-        if (read_count != 3) {
-            printf("Comando invalido!\n");
-            continue;
-        }
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                
+                // Calcula posição X, Y deste quadrado na tela
+                int posX = SIDE_MARGIN + j * (CELL_SIZE + GAP);
+                int posY = TOP_MARGIN + i * (CELL_SIZE + GAP);
 
-        // Validação básica de limites
-        if (r < 0 || r >= rows || c < 0 || c >= cols) {
-            printf("Coordenada fora do limite!\n");
-            getchar(); // Pausa pra ler o erro
-            continue;
-        }
+                int state = states[i][j];
+                int number = numbers[i][j];
+                bool reveal = (gameState != GAME_UNFINISHED); // Revela tudo se acabou
 
-        // Processa Ação
-        if (action == 'o') {
-            int res = check_tile(mf, r, c);
-            if (res == CHECKED_MINE) {
-                exploded = true;
+                // Lógica de Desenho de cada Célula
+                if (state == TS_KNOWN || (reveal && state != TS_FLAGGED)) {
+                    // Célula Aberta
+                    DrawRectangle(posX, posY, CELL_SIZE, CELL_SIZE, COL_KNOWN);
+                    
+                    if (number == -1) {
+                        DrawRectangle(posX + 5, posY + 5, CELL_SIZE - 10, CELL_SIZE - 10, BLACK); // Mina Quadrada
+                    } else if (number > 0) {
+                        // Centralizar texto é chatinho, aqui vai um valor aproximado
+                        DrawText(TextFormat("%d", number), posX + 8, posY + 5, 20, GetNumberColor(number));
+                    }
+                } 
+                else if (state == TS_FLAGGED) {
+                    // Célula com Bandeira
+                    DrawRectangle(posX, posY, CELL_SIZE, CELL_SIZE, COL_UNKNOWN);
+                    DrawRectangle(posX + 8, posY + 8, CELL_SIZE - 16, CELL_SIZE - 16, RED); // Bandeira "abstrata"
+                    
+                    // Se perdeu e a bandeira tava errada
+                    if (reveal && number != -1) {
+                        DrawLine(posX, posY, posX + CELL_SIZE, posY + CELL_SIZE, RED); // X de erro
+                        DrawLine(posX + CELL_SIZE, posY, posX, posY + CELL_SIZE, RED);
+                    }
+                } 
+                else {
+                    // Célula Fechada (Unknown)
+                    DrawRectangle(posX, posY, CELL_SIZE, CELL_SIZE, COL_UNKNOWN);
+                    // Efeito de relevo 3D simples (borda branca e escura)
+                    DrawRectangleLines(posX, posY, CELL_SIZE, CELL_SIZE, DARKGRAY);
+                }
             }
-        } 
-        else if (action == 'f') {
-            flag_tile(mf, r, c);
-        } 
-        else if (action == 'u') {
-            unflag_tile(mf, r, c);
         }
 
-        // Verifica vitória/derrota
-        state = check_game_state(mf, exploded);
+        EndDrawing();
     }
 
-    // Fim de jogo
-    clear_screen();
-    print_board(mf, true); // Revela tudo
-
-    if (state == GAME_WON) {
-        printf("\n>>> PARABENS! VOCE VENCEU! <<<\n");
-    } else {
-        printf("\n>>> BOOM! VOCE PERDEU! <<<\n");
-    }
-
+    // Limpeza
     destroy_minefield(mf);
+    CloseWindow();
+
     return 0;
 }

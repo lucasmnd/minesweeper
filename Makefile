@@ -1,5 +1,8 @@
+# GERADO POR IA
+
 CC = gcc
-CFLAGS = -Iinc -Wall -Wextra -g -static
+CFLAGS = -Iinc -Wall -Wextra -g
+LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 SRC_DIR = src
 BUILD_DIR = build
@@ -16,7 +19,7 @@ OBJS := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 # 3. MUDANÇA CRÍTICA: Criação dinâmica de pastas
 # O alvo (%) agora pode conter barras (ex: engine/core.o)

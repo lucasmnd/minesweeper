@@ -84,7 +84,6 @@ static int generate_numbers(minefield_t *minefield){
 }
 
 bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col, enum Tile_State ts){
-    
     int32_t (*tile_states)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->tile_states;
     int32_t (*numbers_grid)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->numbers_grid;
     enum Tile_State current_state = tile_states[row][col];
