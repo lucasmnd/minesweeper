@@ -1,4 +1,5 @@
-#include "actions.h"
+#include "internals/actions.h"
+#include "api_enums.h"
 
 static void check_adjacent(minefield_t *minefield, uint16_t row, uint16_t col);
 

@@ -1,0 +1,20 @@
+#ifndef H_API_ENUMS
+#define H_API_ENUMS
+
+enum Check_Ret{
+    CHECKED_MINE, CHECKED_NUMBER, CHECKED_FLAG, CHECKED_KNOWN
+};
+
+enum Flag_Ret{
+    FLAGGED_KNOWN, FLAGGED_UNKNOWN
+};
+
+enum Game_State{
+    GAME_UNFINISHED, GAME_LOST, GAME_WON
+};
+
+enum Tile_State{
+    TS_UNKNOWN, TS_KNOWN, TS_FLAGGED
+};
+
+#endif

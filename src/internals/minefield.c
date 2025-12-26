@@ -1,4 +1,4 @@
-#include "minefield.h"
+#include "internals/minefield.h"
 #include <stdlib.h>
 #include <time.h>
 #include <sysexits.h>
@@ -23,6 +23,8 @@ minefield_t* create_minefield(uint16_t rows, uint16_t cols, uint16_t mines){
 }
 
 void destroy_minefield(minefield_t *minefield){
+    if(minefield == NULL) return;
+
     free(minefield->numbers_grid);
     free(minefield->tile_states);
 

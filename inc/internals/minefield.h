@@ -6,9 +6,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-enum Tile_State{
-    TS_UNKNOWN, TS_KNOWN, TS_FLAGGED
-};
+#include "api_enums.h"
 
 typedef struct s_minefield {
     uint16_t rows, cols;
