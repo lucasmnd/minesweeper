@@ -4,7 +4,7 @@
 #include "api_enums.h"
 
 static void check_adjacent(minefield_t *minefield, uint16_t row, uint16_t col);
-static bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col,
+static void set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col,
     enum Tile_State ts);
 static int chord_tile(minefield_t *minefield, uint16_t row, uint16_t col);
 
@@ -113,19 +113,18 @@ static int chord_tile(minefield_t *minefield, uint16_t row, uint16_t col){
     return ret;
 }
 
-static bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col, enum Tile_State ts){
+static void set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col, enum Tile_State ts){
     int32_t (*tile_states)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->tile_states;
-    int32_t (*numbers_grid)[minefield->cols] = (int32_t (*)[minefield->cols]) minefield->numbers_grid;
     enum Tile_State current_state = tile_states[row][col];
     
-    if(current_state == ts) return true;
+    if(current_state == ts) return;
     
     switch(current_state){
         case TS_UNKNOWN:
             break;
         
         case TS_KNOWN:
-            exit(EX_USAGE);
+            return;
             break;
 
         case TS_FLAGGED:
@@ -144,11 +143,7 @@ static bool set_tile_state(minefield_t *minefield, uint16_t row, uint16_t col, e
             break;
         
         case TS_KNOWN:
-            if(numbers_grid[row][col] == -1)
-                return false;
             minefield->known_tiles++;
             break;
     }
-
-    return true;
 }
